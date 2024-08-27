@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CGPA Calculator</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Link to your CSS file -->
+</head>
+<body>
+    <div class="container">
+        <h1>CGPA Calculator</h1>
+        <label for="studentName">Student Name:</label>
+        <input type="text" id="studentName" placeholder="Enter your name">
+        
+        <label for="semester">Semester:</label>
+        <input type="text" id="semester" placeholder="Enter your semester">
+        
+        <label for="numSubjects">Enter Number of Subjects:</label>
+        <input type="number" id="numSubjects" min="1" placeholder="Enter number of subjects">
+        <button onclick="generateInputs()">Next</button>
+        
+        <div id="subjectDetails" style="display: none;">
+            <h2>Enter Subject Details</h2>
+            <div id="subjectsContainer"></div>
+            <button onclick="calculateCGPA()">Calculate CGPA</button>
+        </div>
+        
+        <h2 id="cgpaResult" style="display: none;"></h2>
+        <button id="downloadBtn" style="display: none;" onclick="downloadGradeCard()">Download Grade Card</button>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="app.js"></script> <!-- Link to your JavaScript file -->
+</body>
+</html>
