@@ -1,89 +1,109 @@
-function generateInputs() {
-    const numSubjects = document.getElementById('numSubjects').value;
-    const subjectsContainer = document.getElementById('subjectsContainer');
-    subjectsContainer.innerHTML = ''; // Clear previous inputs if any
-    for (let i = 0; i < numSubjects; i++) {
-        const subjectDiv = document.createElement('div');
-        subjectDiv.className = 'subject-input';
-        subjectDiv.innerHTML = `
-            <label>Subject ${i + 1} Name:</label>
-            <input type="text" class="subjectName" placeholder="Enter subject name"><br>
-            <label>Credits:</label>
-            <input type="number" class="credits" min="1" placeholder="Enter credits"><br>
-            <label>Marks:</label>
-            <input type="number" class="marks" min="0" max="100" placeholder="Enter marks"><br>
-        `;
-        subjectsContainer.appendChild(subjectDiv);
+document.getElementById("nextButton").addEventListener("click", function () {
+    const studentName = document.getElementById("studentName").value;
+    const semester = document.getElementById("semester").value;
+    const numberOfSubjects = document.getElementById("numberOfSubjects").value;
+
+    if (studentName && semester && numberOfSubjects) {
+        generateInputs(numberOfSubjects);
+    } else {
+        alert("Please fill out all the fields.");
     }
-    document.getElementById('subjectDetails').style.display = 'block';
+});
+
+function generateInputs(numberOfSubjects) {
+    const subjectInputs = document.getElementById("subjectInputs");
+    subjectInputs.innerHTML = ""; // Clear previous inputs if any
+
+    for (let i = 1; i <= numberOfSubjects; i++) {
+        const subjectHtml = `
+            <div class="form-group">
+                <label for="subjectName${i}">Subject ${i} Name:</label>
+                <input type="text" id="subjectName${i}" placeholder="Enter subject name">
+            </div>
+            <div class="form-group">
+                <label for="credits${i}">Credits:</label>
+                <input type="number" id="credits${i}" placeholder="Enter credits">
+            </div>
+            <div class="form-group">
+                <label for="marks${i}">Marks:</label>
+                <input type="number" id="marks${i}" placeholder="Enter marks out of 100">
+            </div>
+        `;
+        subjectInputs.insertAdjacentHTML('beforeend', subjectHtml);
+    }
+
+    const calculateButtonHtml = `
+        <button id="calculateButton">Calculate CGPA</button>
+    `;
+    subjectInputs.insertAdjacentHTML('beforeend', calculateButtonHtml);
+
+    document.getElementById("calculateButton").addEventListener("click", calculateCGPA);
 }
 
 function calculateCGPA() {
-    const credits = document.getElementsByClassName('credits');
-    const marks = document.getElementsByClassName('marks');
-    const subjectNames = document.getElementsByClassName('subjectName');
+    const numberOfSubjects = document.getElementById("numberOfSubjects").value;
     let totalCredits = 0;
-    let weightedSum = 0;
-    let gradeCardData = [];
+    let totalPoints = 0;
 
-    for (let i = 0; i < credits.length; i++) {
-        const credit = parseFloat(credits[i].value);
-        const mark = parseFloat(marks[i].value);
-        let grade;
+    for (let i = 1; i <= numberOfSubjects; i++) {
+        const credits = parseFloat(document.getElementById(`credits${i}`).value);
+        const marks = parseFloat(document.getElementById(`marks${i}`).value);
 
-        if (mark >= 91) grade = 10;
-        else if (mark >= 81) grade = 9;
-        else if (mark >= 71) grade = 8;
-        else if (mark >= 61) grade = 7;
-        else if (mark >= 51) grade = 6;
-        else if (mark >= 41) grade = 5;
-        else if (mark >= 31) grade = 4;
-        else grade = 0;
+        if (!credits || !marks) {
+            alert(`Please enter valid credits and marks for Subject ${i}.`);
+            return;
+        }
 
-        weightedSum += grade * credit;
-        totalCredits += credit;
-
-        gradeCardData.push({
-            subject: subjectNames[i].value,
-            credit: credit,
-            marks: mark,
-            grade: grade
-        });
+        const grade = calculateGrade(marks);
+        totalCredits += credits;
+        totalPoints += credits * grade;
     }
 
-    const cgpa = weightedSum / totalCredits;
-    document.getElementById('cgpaResult').innerText = `Your CGPA is: ${cgpa.toFixed(2)}`;
-    document.getElementById('cgpaResult').style.display = 'block';
-    document.getElementById('downloadBtn').style.display = 'block';
-
-    // Store the grade card data globally for use in download
-    window.gradeCardData = gradeCardData;
+    const cgpa = totalPoints / totalCredits;
+    displayResult(cgpa.toFixed(2));
 }
 
-function downloadGradeCard() {
-    const { jsPDF } = window.jspdf;
+function calculateGrade(marks) {
+    if (marks >= 91) return 10;
+    if (marks >= 81) return 9;
+    if (marks >= 71) return 8;
+    if (marks >= 61) return 7;
+    if (marks >= 51) return 6;
+    if (marks >= 41) return 5;
+    return 0;
+}
+
+function displayResult(cgpa) {
+    const resultDiv = document.getElementById("result");
+    resultDiv.innerHTML = `Your CGPA is: ${cgpa}`;
+
+    // Create PDF grade card
+    generatePDF(cgpa);
+}
+
+function generatePDF(cgpa) {
+    const studentName = document.getElementById("studentName").value;
+    const semester = document.getElementById("semester").value;
+    const numberOfSubjects = document.getElementById("numberOfSubjects").value;
+    
     const doc = new jsPDF();
-
-    const studentName = document.getElementById('studentName').value;
-    const semester = document.getElementById('semester').value;
-
-    doc.setFontSize(18);
-    doc.text('Grade Card', 105, 20, null, null, 'center');
-    doc.setFontSize(12);
+    doc.setFontSize(22);
+    doc.text("Grade Card", 105, 20, null, null, "center");
+    doc.setFontSize(16);
     doc.text(`Name: ${studentName}`, 20, 40);
     doc.text(`Semester: ${semester}`, 20, 50);
+    doc.text(`Number of Subjects: ${numberOfSubjects}`, 20, 60);
+    doc.text(`CGPA: ${cgpa}`, 20, 70);
 
-    let startY = 70;
-    window.gradeCardData.forEach((item, index) => {
-        doc.text(`Subject ${index + 1}: ${item.subject}`, 20, startY);
-        doc.text(`Credits: ${item.credit}`, 120, startY);
-        doc.text(`Marks: ${item.marks}`, 20, startY + 10);
-        doc.text(`Grade: ${item.grade}`, 120, startY + 10);
-        startY += 20;
-    });
+    for (let i = 1; i <= numberOfSubjects; i++) {
+        const subjectName = document.getElementById(`subjectName${i}`).value;
+        const credits = document.getElementById(`credits${i}`).value;
+        const marks = document.getElementById(`marks${i}`).value;
+        const grade = calculateGrade(parseFloat(marks));
 
-    const cgpa = document.getElementById('cgpaResult').innerText.split(': ')[1];
-    doc.text(`CGPA: ${cgpa}`, 20, startY + 10);
+        doc.text(`Subject ${i}: ${subjectName}`, 20, 80 + i * 10);
+        doc.text(`Credits: ${credits}, Marks: ${marks}, Grade: ${grade}`, 20, 90 + i * 10);
+    }
 
-    doc.save('GradeCard.pdf');
+    doc.save("GradeCard.pdf");
 }
